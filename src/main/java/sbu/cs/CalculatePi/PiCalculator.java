@@ -23,39 +23,19 @@ public class PiCalculator {
      */
 
     public static class CalculatePi implements Runnable {
-
-        MathContext mc = new MathContext(1000);
         int n;
+        private static MathContext mc = new MathContext(1100);
+        static final BigDecimal A = new BigDecimal(2).multiply(new BigDecimal(2).sqrt(mc), mc).divide(new BigDecimal(9801), mc);
         public CalculatePi(int n) {
             this.n = n;
         }
 
         @Override
         public void run() {
-            BigDecimal sign = new BigDecimal(1);
-            if (n % 2 == 1) {
-                sign = new BigDecimal(-1);
-            }
-
-            BigDecimal numerator = factorial(6* n);
-            BigDecimal sum2 = new BigDecimal("13591409");
-            BigDecimal sum1 = new BigDecimal("545140134");
-            BigDecimal nBig = new BigDecimal(n);
-            BigDecimal sum3 = sum1.multiply(nBig, mc);
-            BigDecimal TotalSum = sum3.add(sum2, mc);
-            numerator = numerator.multiply(TotalSum);
-            numerator = numerator.multiply(sign);
-
-            BigDecimal denominator = factorial(3 * n);
-            BigDecimal fact2 = factorial(n).pow(3);
-            BigDecimal fact3 = new BigDecimal("640320");
-            BigDecimal fact4 = fact3.pow(3 * n + 3 / 2);
-            denominator = denominator.multiply(fact2, mc);
-            denominator = denominator.multiply(fact4, mc);
-            denominator = denominator.multiply(sign, mc);
-
-            BigDecimal result = numerator.divide(denominator, mc);
-            addTouSum(result);
+            BigDecimal nominator = factorial(4 * n).multiply(new BigDecimal(26390 * n + 1103), mc);
+            BigDecimal denominator = factorial(n).pow(4, mc).multiply(new BigDecimal(396).pow(4 * n, mc), mc);
+            BigDecimal result = A.multiply(nominator, mc).divide(denominator, mc);
+            addToSum(result);
         }
         public BigDecimal factorial(int n){
             BigDecimal temp = new BigDecimal(1);
@@ -65,53 +45,40 @@ public class PiCalculator {
 
             return temp;
         }
+        
     }
 
     public static BigDecimal sum;
 
-    public static synchronized void addTouSum(BigDecimal value){
+    public static synchronized void addToSum(BigDecimal value){
         sum = sum.add(value);
     }
 
     public String calculate(int floatingPoint)
     {
         // TODO
-        return null;
-    }
+        ExecutorService pool = Executors.newFixedThreadPool(4);
 
-    public static void main(String[] args) {
-        // Use the main function to test the code yourself
-        ExecutorService threadPool = Executors.newFixedThreadPool(4);
+        sum = BigDecimal.valueOf(0);
 
-        sum = new BigDecimal(0);
-
-        for (int i = 0; i < 100; i++) {                          // increasing the number of iterations improves
-            CalculatePi task = new CalculatePi(i);          // accuracy, try 200 and see the difference!
-            threadPool.execute(task);
+        for (int i = 0; i <= 200; i++) {
+            CalculatePi task = new CalculatePi(i);
+            pool.execute(task);
         }
 
-        threadPool.shutdown();
+        pool.shutdown();
 
         try {
-            threadPool.awaitTermination(10000, TimeUnit.MILLISECONDS);
+            pool.awaitTermination(10000, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        sum = sum.setScale(1000, RoundingMode.HALF_DOWN);
+        return BigDecimal.valueOf(1).divide(sum, new MathContext(1100)).setScale(floatingPoint, RoundingMode.DOWN).toString();
+    }
 
-        BigDecimal num = new BigDecimal("12");
-        BigDecimal num1 = new BigDecimal("1");
-
-        sum = sum.multiply(num, new MathContext(1000));
-
-        BigDecimal ans = num1.divide(sum, new MathContext(1000));
-
-        System.out.println(ans);
-
-        BigDecimal accVal = new BigDecimal("3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679");
-
-        System.out.println("Difference:        " + accVal.subtract(sum).abs().toPlainString());
-
+    public static void main(String[] args) {
+//        String pi = calculate(7);
+//        System.out.println(pi);
     }
 }
