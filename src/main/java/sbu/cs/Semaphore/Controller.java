@@ -38,5 +38,7 @@ public class Controller {
             Combine the 4 resulting blocks to create the final matrix product and return it.
          */
 
+        // handle this in Operator Class
+
     }
 }
